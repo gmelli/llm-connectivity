@@ -398,5 +398,15 @@ class OpenAIAdapter:
             # Map to unified exception hierarchy
             raise map_openai_exception(e)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Return string representation of OpenAIAdapter.
+
+        Returns:
+            String representation showing provider and timeout configuration.
+
+        Example:
+            >>> adapter = OpenAIAdapter(timeout=30.0)
+            >>> print(repr(adapter))
+            OpenAIAdapter(model=openai, timeout=30.0)
+        """
         return f"OpenAIAdapter(model=openai, timeout={self.client.timeout})"
