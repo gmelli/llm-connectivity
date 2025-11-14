@@ -23,22 +23,25 @@ Design Principles:
 - Leverage Anthropic's built-in token tracking (superior to OpenAI)
 - Map all exceptions to unified hierarchy
 """
+
 import os
-from typing import List, Dict, Any, Optional, Iterator
+from collections.abc import Iterator
 from dataclasses import dataclass
+from typing import Any, Optional
 
 from anthropic import Anthropic
 
-from llm_connectivity.errors import map_anthropic_exception, LLMError
+from llm_connectivity.errors import map_anthropic_exception
 from llm_connectivity.retry import retry_with_backoff
 
 
 @dataclass
 class ChatResponse:
     """Unified chat response format (same as OpenAI adapter)."""
+
     content: str
     model: str
-    usage: Dict[str, int]  # {prompt_tokens, completion_tokens, total_tokens}
+    usage: dict[str, int]  # {prompt_tokens, completion_tokens, total_tokens}
     cost: Optional[float]
     provider: str = "anthropic"
     raw_response: Optional[Any] = None
@@ -47,6 +50,7 @@ class ChatResponse:
 @dataclass
 class StreamChunk:
     """Streaming response chunk (same as OpenAI adapter)."""
+
     content: str
     finish_reason: Optional[str] = None
     raw_chunk: Optional[Any] = None
@@ -84,7 +88,7 @@ class AnthropicAdapter:
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
         timeout: float = 60.0,
-        max_retries: int = 3
+        max_retries: int = 3,
     ):
         """Initialize Anthropic adapter.
 
@@ -100,10 +104,10 @@ class AnthropicAdapter:
             api_key=api_key or os.getenv("ANTHROPIC_API_KEY"),
             base_url=base_url,
             timeout=timeout,
-            max_retries=0  # We handle retries ourselves via decorator
+            max_retries=0,  # We handle retries ourselves via decorator
         )
 
-    def _estimate_tokens(self, messages: List[Dict[str, str]], model: str) -> int:
+    def _estimate_tokens(self, messages: list[dict[str, str]], model: str) -> int:
         """Estimate token count for messages (pre-request).
 
         Simple heuristic: ~4 chars per token (rough approximation)
@@ -122,7 +126,7 @@ class AnthropicAdapter:
         char_count = len(text)
         return (char_count // 4) + (len(messages) * 10)  # +10 tokens per message for overhead
 
-    def _calculate_cost(self, usage: Dict[str, int], model: str) -> Optional[float]:
+    def _calculate_cost(self, usage: dict[str, int], model: str) -> Optional[float]:
         """Calculate cost for request.
 
         Args:
@@ -152,11 +156,11 @@ class AnthropicAdapter:
     @retry_with_backoff
     def chat(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         model: str = "claude-3-opus-20240229",
         max_tokens: int = 1024,  # Anthropic requires max_tokens (no optional)
         temperature: float = 1.0,
-        **kwargs
+        **kwargs: Any,
     ) -> ChatResponse:
         """Send chat completion request.
 
@@ -183,21 +187,21 @@ class AnthropicAdapter:
             # Call Anthropic API
             response = self.client.messages.create(
                 model=model,
-                messages=messages,
+                messages=messages,  # type: ignore[arg-type]
                 max_tokens=max_tokens,
                 temperature=temperature,
-                **kwargs
+                **kwargs,
             )
 
             # Extract response
-            content = response.content[0].text
+            content = response.content[0].text  # type: ignore[union-attr]
 
             # Post-request token actuals (from API response)
             # Anthropic provides both input and output tokens (superior to OpenAI)
             usage = {
                 "prompt_tokens": response.usage.input_tokens,
                 "completion_tokens": response.usage.output_tokens,
-                "total_tokens": response.usage.input_tokens + response.usage.output_tokens
+                "total_tokens": response.usage.input_tokens + response.usage.output_tokens,
             }
 
             # Calculate cost
@@ -209,20 +213,20 @@ class AnthropicAdapter:
                 usage=usage,
                 cost=cost,
                 provider="anthropic",
-                raw_response=response
+                raw_response=response,
             )
 
         except Exception as e:
             # Map to unified exception hierarchy
-            raise map_anthropic_exception(e)
+            raise map_anthropic_exception(e) from e
 
     def chat_stream(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         model: str = "claude-3-opus-20240229",
         max_tokens: int = 1024,
         temperature: float = 1.0,
-        **kwargs
+        **kwargs: Any,
     ) -> Iterator[StreamChunk]:
         """Send streaming chat completion request.
 
@@ -249,29 +253,23 @@ class AnthropicAdapter:
             # Call Anthropic streaming API (uses context manager)
             with self.client.messages.stream(
                 model=model,
-                messages=messages,
+                messages=messages,  # type: ignore[arg-type]
                 max_tokens=max_tokens,
                 temperature=temperature,
-                **kwargs
+                **kwargs,
             ) as stream:
                 # Abstract context manager to simple iterator
                 for text in stream.text_stream:
-                    yield StreamChunk(
-                        content=text,
-                        finish_reason=None,
-                        raw_chunk=None
-                    )
+                    yield StreamChunk(content=text, finish_reason=None, raw_chunk=None)
 
                 # Final chunk with finish reason
                 yield StreamChunk(
-                    content="",
-                    finish_reason="end_turn",  # Anthropic terminology
-                    raw_chunk=None
+                    content="", finish_reason="end_turn", raw_chunk=None  # Anthropic terminology
                 )
 
         except Exception as e:
             # Map to unified exception hierarchy
-            raise map_anthropic_exception(e)
+            raise map_anthropic_exception(e) from e
 
     def __repr__(self) -> str:
         """Return string representation of AnthropicAdapter.

@@ -17,22 +17,25 @@ Design Principles:
 - Estimate tokens (Google doesn't provide detailed tracking)
 - Map all exceptions to unified hierarchy
 """
+
 import os
-from typing import List, Dict, Any, Optional, Iterator, Union
+from collections.abc import Iterator
 from dataclasses import dataclass
+from typing import Any, Optional, Union
 
 import google.generativeai as genai
 
-from llm_connectivity.errors import map_google_exception, LLMError
+from llm_connectivity.errors import map_google_exception
 from llm_connectivity.retry import retry_with_backoff
 
 
 @dataclass
 class ChatResponse:
     """Unified chat response format (same as OpenAI/Anthropic adapters)."""
+
     content: str
     model: str
-    usage: Dict[str, int]  # {prompt_tokens, completion_tokens, total_tokens}
+    usage: dict[str, int]  # {prompt_tokens, completion_tokens, total_tokens}
     cost: Optional[float]
     provider: str = "google"
     raw_response: Optional[Any] = None
@@ -41,6 +44,7 @@ class ChatResponse:
 @dataclass
 class StreamChunk:
     """Streaming response chunk (same as OpenAI/Anthropic adapters)."""
+
     content: str
     finish_reason: Optional[str] = None
     raw_chunk: Optional[Any] = None
@@ -49,9 +53,10 @@ class StreamChunk:
 @dataclass
 class EmbeddingResponse:
     """Unified embedding response format (same as OpenAI/Anthropic adapters)."""
-    embeddings: List[List[float]]
+
+    embeddings: list[list[float]]
     model: str
-    usage: Dict[str, int]  # {prompt_tokens, total_tokens}
+    usage: dict[str, int]  # {prompt_tokens, total_tokens}
     cost: Optional[float]
     provider: str = "google"
     raw_response: Optional[Any] = None
@@ -89,11 +94,7 @@ class GoogleAdapter:
         "embedding-001": 0.00001,  # Legacy model (free tier)
     }
 
-    def __init__(
-        self,
-        api_key: Optional[str] = None,
-        timeout: float = 60.0
-    ):
+    def __init__(self, api_key: Optional[str] = None, timeout: float = 60.0):
         """Initialize Google AI adapter.
 
         Args:
@@ -109,7 +110,7 @@ class GoogleAdapter:
         genai.configure(api_key=api_key)
         self.timeout = timeout
 
-    def _messages_to_prompt(self, messages: List[Dict[str, str]]) -> str:
+    def _messages_to_prompt(self, messages: list[dict[str, str]]) -> str:
         """Convert structured messages to single prompt string.
 
         Google's generate_content() expects a single string prompt,
@@ -156,7 +157,7 @@ class GoogleAdapter:
         """
         return len(text) // 4
 
-    def _calculate_cost(self, usage: Dict[str, int], model: str) -> Optional[float]:
+    def _calculate_cost(self, usage: dict[str, int], model: str) -> Optional[float]:
         """Calculate cost for request.
 
         Args:
@@ -188,11 +189,11 @@ class GoogleAdapter:
     @retry_with_backoff
     def chat(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         model: str = "models/gemini-2.5-pro",
         max_tokens: Optional[int] = None,
         temperature: float = 1.0,
-        **kwargs
+        **kwargs: Any,
     ) -> ChatResponse:
         """Send chat completion request.
 
@@ -230,7 +231,8 @@ class GoogleAdapter:
                 generation_config["max_output_tokens"] = max_tokens
 
             # Configure safety settings (less restrictive for testing)
-            from google.generativeai.types import HarmCategory, HarmBlockThreshold
+            from google.generativeai.types import HarmBlockThreshold, HarmCategory
+
             safety_settings = {
                 HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
                 HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
@@ -241,9 +243,9 @@ class GoogleAdapter:
             # Call Google AI API
             response = gemini_model.generate_content(
                 prompt,
-                generation_config=generation_config,
+                generation_config=generation_config,  # type: ignore[arg-type]
                 safety_settings=safety_settings,
-                **kwargs
+                **kwargs,
             )
 
             # Extract response (handle blocked/empty responses)
@@ -252,19 +254,19 @@ class GoogleAdapter:
             except (ValueError, AttributeError) as e:
                 # Response blocked by safety filters or no valid parts
                 # Check if response has candidates
-                if hasattr(response, 'candidates') and response.candidates:
+                if hasattr(response, "candidates") and response.candidates:
                     # Response was blocked, return finish reason
                     finish_reason = response.candidates[0].finish_reason
                     content = f"[Response blocked by Google safety filters: finish_reason={finish_reason}]"
                 else:
-                    raise ValueError(f"Google AI returned empty response: {e}")
+                    raise ValueError(f"Google AI returned empty response: {e}") from e
 
             # Estimate tokens (Google doesn't provide detailed tracking)
             completion_tokens = self._estimate_tokens(content)
             usage = {
                 "prompt_tokens": estimated_tokens,
                 "completion_tokens": completion_tokens,
-                "total_tokens": estimated_tokens + completion_tokens
+                "total_tokens": estimated_tokens + completion_tokens,
             }
 
             # Calculate cost
@@ -276,20 +278,20 @@ class GoogleAdapter:
                 usage=usage,
                 cost=cost,
                 provider="google",
-                raw_response=response
+                raw_response=response,
             )
 
         except Exception as e:
             # Map to unified exception hierarchy
-            raise map_google_exception(e)
+            raise map_google_exception(e) from e
 
     def chat_stream(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         model: str = "models/gemini-2.5-pro",
         max_tokens: Optional[int] = None,
         temperature: float = 1.0,
-        **kwargs
+        **kwargs: Any,
     ) -> Iterator[StreamChunk]:
         """Send streaming chat completion request.
 
@@ -327,7 +329,8 @@ class GoogleAdapter:
                 generation_config["max_output_tokens"] = max_tokens
 
             # Configure safety settings (less restrictive for testing)
-            from google.generativeai.types import HarmCategory, HarmBlockThreshold
+            from google.generativeai.types import HarmBlockThreshold, HarmCategory
+
             safety_settings = {
                 HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
                 HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
@@ -338,33 +341,25 @@ class GoogleAdapter:
             # Call Google AI streaming API
             response = gemini_model.generate_content(
                 prompt,
-                generation_config=generation_config,
+                generation_config=generation_config,  # type: ignore[arg-type]
                 safety_settings=safety_settings,
                 stream=True,
-                **kwargs
+                **kwargs,
             )
 
             # Yield chunks as simple iterator
             for chunk in response:
                 if chunk.text:
-                    yield StreamChunk(
-                        content=chunk.text,
-                        finish_reason=None,
-                        raw_chunk=chunk
-                    )
+                    yield StreamChunk(content=chunk.text, finish_reason=None, raw_chunk=chunk)
 
             # Final chunk
-            yield StreamChunk(
-                content="",
-                finish_reason="stop",
-                raw_chunk=None
-            )
+            yield StreamChunk(content="", finish_reason="stop", raw_chunk=None)
 
         except Exception as e:
             # Map to unified exception hierarchy
-            raise map_google_exception(e)
+            raise map_google_exception(e) from e
 
-    def _calculate_embedding_cost(self, usage: Dict[str, int], model: str) -> Optional[float]:
+    def _calculate_embedding_cost(self, usage: dict[str, int], model: str) -> Optional[float]:
         """Calculate cost for embeddings request.
 
         Args:
@@ -392,10 +387,7 @@ class GoogleAdapter:
 
     @retry_with_backoff
     def embed(
-        self,
-        texts: Union[str, List[str]],
-        model: str = "models/text-embedding-004",
-        **kwargs
+        self, texts: Union[str, list[str]], model: str = "models/text-embedding-004", **kwargs: Any
     ) -> EmbeddingResponse:
         """Generate embeddings for text(s).
 
@@ -426,23 +418,19 @@ class GoogleAdapter:
         input_texts = [texts] if is_single else texts
 
         # Estimate tokens (Google doesn't provide token tracking for embeddings)
-        estimated_tokens = sum(self._estimate_tokens(text) for text in input_texts)
+        estimated_tokens = sum(self._estimate_tokens(text) for text in input_texts)  # type: ignore[misc, arg-type]
         print(f"  Estimated prompt tokens: {estimated_tokens}")
 
         try:
             # Call Google AI Embeddings API
-            result = genai.embed_content(
-                model=model,
-                content=input_texts,
-                **kwargs
-            )
+            result = genai.embed_content(model=model, content=input_texts, **kwargs)
 
             # Extract embeddings
             # Google returns dict with 'embedding' key (not 'embeddings')
             # Structure depends on input:
             #   - Single text: {'embedding': [float, float, ...]}  (flat list)
             #   - Batch texts: {'embedding': [[float, ...], [float, ...], ...]}  (list of lists)
-            embedding = result.get('embedding', [])
+            embedding = result.get("embedding", [])
 
             # Check if this is a batch (list of lists) or single (flat list)
             if embedding and isinstance(embedding[0], list):
@@ -450,15 +438,12 @@ class GoogleAdapter:
                 embeddings = embedding
             elif embedding:
                 # Single: wrap in list
-                embeddings = [embedding]
+                embeddings = [embedding]  # type: ignore[list-item]
             else:
                 embeddings = []
 
             # Estimate usage (Google doesn't provide actual token counts)
-            usage = {
-                "prompt_tokens": estimated_tokens,
-                "total_tokens": estimated_tokens
-            }
+            usage = {"prompt_tokens": estimated_tokens, "total_tokens": estimated_tokens}
 
             # Calculate cost
             cost = self._calculate_embedding_cost(usage, model)
@@ -469,12 +454,12 @@ class GoogleAdapter:
                 usage=usage,
                 cost=cost,
                 provider="google",
-                raw_response=result
+                raw_response=result,
             )
 
         except Exception as e:
             # Map to unified exception hierarchy
-            raise map_google_exception(e)
+            raise map_google_exception(e) from e
 
     def __repr__(self) -> str:
         """Return string representation of GoogleAdapter.

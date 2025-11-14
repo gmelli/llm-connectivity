@@ -15,19 +15,19 @@ Design:
 2. get_retry_strategy() maps error type → strategy
 3. retry_with_backoff() decorator applies retry logic
 """
-import time
+
 import functools
-from typing import Callable, Type, Tuple, Optional
+import time
 from dataclasses import dataclass
+from typing import Any, Callable, Optional
 
 from llm_connectivity.errors import (
-    LLMError,
+    AuthenticationError,
+    ContextWindowExceededError,
+    ModelNotFoundError,
+    NetworkError,
     RateLimitError,
     ValidationError,
-    NetworkError,
-    ContextWindowExceededError,
-    AuthenticationError,
-    ModelNotFoundError,
 )
 
 
@@ -41,6 +41,7 @@ class RetryStrategy:
         max_delay: Maximum delay between retries (seconds)
         max_retries: Maximum number of retry attempts
     """
+
     multiplier: float
     min_delay: float
     max_delay: float
@@ -50,30 +51,27 @@ class RetryStrategy:
 # Differentiated strategies by error type (from L002 research)
 RETRY_STRATEGIES = {
     RateLimitError: RetryStrategy(
-        multiplier=2.0,      # Aggressive exponential backoff
+        multiplier=2.0,  # Aggressive exponential backoff
         min_delay=1.0,
         max_delay=120.0,
-        max_retries=3
+        max_retries=3,
     ),
     ValidationError: RetryStrategy(
-        multiplier=1.0,      # Minimal backoff (for retry-with-context)
+        multiplier=1.0,  # Minimal backoff (for retry-with-context)
         min_delay=1.0,
         max_delay=10.0,
-        max_retries=3
+        max_retries=3,
     ),
     NetworkError: RetryStrategy(
-        multiplier=1.5,      # Moderate backoff
-        min_delay=2.0,
-        max_delay=30.0,
-        max_retries=3
+        multiplier=1.5, min_delay=2.0, max_delay=30.0, max_retries=3  # Moderate backoff
     ),
 }
 
 # Non-retryable errors
 NON_RETRYABLE_ERRORS = (
     ContextWindowExceededError,  # Requires user intervention
-    AuthenticationError,          # Wrong credentials won't fix themselves
-    ModelNotFoundError,           # Model doesn't exist or no access
+    AuthenticationError,  # Wrong credentials won't fix themselves
+    ModelNotFoundError,  # Model doesn't exist or no access
 )
 
 
@@ -96,12 +94,7 @@ def get_retry_strategy(error: Exception) -> Optional[RetryStrategy]:
             return strategy
 
     # Default strategy for unknown retryable errors
-    return RetryStrategy(
-        multiplier=1.5,
-        min_delay=1.0,
-        max_delay=30.0,
-        max_retries=3
-    )
+    return RetryStrategy(multiplier=1.5, min_delay=1.0, max_delay=30.0, max_retries=3)
 
 
 def calculate_backoff(attempt: int, strategy: RetryStrategy) -> float:
@@ -145,8 +138,9 @@ def retry_with_backoff(func: Callable) -> Callable:
     Returns:
         Wrapped function with retry logic
     """
+
     @functools.wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
         last_error = None
 
         # Try once without retry
@@ -167,7 +161,9 @@ def retry_with_backoff(func: Callable) -> Callable:
                 delay = calculate_backoff(attempt, strategy)
 
                 # Log retry attempt (in production, use proper logging)
-                print(f"  Retry {attempt}/{strategy.max_retries} after {delay:.1f}s ({type(last_error).__name__})")
+                print(
+                    f"  Retry {attempt}/{strategy.max_retries} after {delay:.1f}s ({type(last_error).__name__})"
+                )
 
                 # Wait
                 time.sleep(delay)
@@ -188,7 +184,7 @@ def retry_with_backoff(func: Callable) -> Callable:
                         strategy = new_strategy
 
             # All retries exhausted
-            raise last_error
+            raise last_error from None
 
     return wrapper
 

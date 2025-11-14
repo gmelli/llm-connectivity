@@ -25,12 +25,20 @@ Usage Examples:
     # Change line 1: model="openai/gpt-4" → model="anthropic/claude-3-sonnet"
     # Done! (validates L002 target)
 """
-from typing import List, Dict, Optional, Union, Iterator
 
-# Import adapters
-from llm_connectivity.providers.openai_adapter import OpenAIAdapter, ChatResponse, StreamChunk, EmbeddingResponse
+from collections.abc import Iterator
+from typing import Any, Optional, Union
+
 from llm_connectivity.providers.anthropic_adapter import AnthropicAdapter
 from llm_connectivity.providers.google_adapter import GoogleAdapter
+
+# Import adapters
+from llm_connectivity.providers.openai_adapter import (
+    ChatResponse,
+    EmbeddingResponse,
+    OpenAIAdapter,
+    StreamChunk,
+)
 
 
 class LLMClient:
@@ -49,8 +57,8 @@ class LLMClient:
         self,
         model: Optional[str] = None,
         provider: Optional[Union[OpenAIAdapter, AnthropicAdapter, GoogleAdapter]] = None,
-        **kwargs
-    ):
+        **kwargs: Any,
+    ) -> None:
         """Initialize LLM client.
 
         Args:
@@ -81,7 +89,9 @@ class LLMClient:
         else:
             raise ValueError("Must specify either 'model' or 'provider'")
 
-    def _create_provider_from_string(self, model_string: str, **kwargs) -> Union[OpenAIAdapter, AnthropicAdapter, GoogleAdapter]:
+    def _create_provider_from_string(
+        self, model_string: str, **kwargs: Any
+    ) -> Union[OpenAIAdapter, AnthropicAdapter, GoogleAdapter]:
         """Create provider adapter from model string.
 
         Args:
@@ -126,11 +136,11 @@ class LLMClient:
 
     def chat(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         model: Optional[str] = None,
         max_tokens: Optional[int] = None,
         temperature: float = 1.0,
-        **kwargs
+        **kwargs: Any,
     ) -> ChatResponse:
         """Send chat completion request.
 
@@ -158,21 +168,21 @@ class LLMClient:
         """
         model_name = self._extract_model_name(model or self.model)
 
-        return self.provider.chat(
+        return self.provider.chat(  # type: ignore[no-any-return]
             messages=messages,
             model=model_name,
             max_tokens=max_tokens,
             temperature=temperature,
-            **kwargs
+            **kwargs,
         )
 
     def chat_stream(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         model: Optional[str] = None,
         max_tokens: Optional[int] = None,
         temperature: float = 1.0,
-        **kwargs
+        **kwargs: Any,
     ) -> Iterator[StreamChunk]:
         """Send streaming chat completion request.
 
@@ -195,19 +205,16 @@ class LLMClient:
         """
         model_name = self._extract_model_name(model or self.model)
 
-        yield from self.provider.chat_stream(
+        yield from self.provider.chat_stream(  # type: ignore[misc]
             messages=messages,
             model=model_name,
-            max_tokens=max_tokens,
+            max_tokens=max_tokens,  # type: ignore[arg-type]
             temperature=temperature,
-            **kwargs
+            **kwargs,
         )
 
     def embed(
-        self,
-        texts: Union[str, List[str]],
-        model: Optional[str] = None,
-        **kwargs
+        self, texts: Union[str, list[str]], model: Optional[str] = None, **kwargs: Any
     ) -> EmbeddingResponse:
         """Generate embeddings for text(s).
 
@@ -235,7 +242,7 @@ class LLMClient:
             embeddings = response.embeddings
         """
         # Check if provider has embed method
-        if not hasattr(self.provider, 'embed'):
+        if not hasattr(self.provider, "embed"):
             raise AttributeError(
                 f"Provider {self.provider.__class__.__name__} does not support embeddings"
             )
@@ -255,9 +262,9 @@ class LLMClient:
         # Call provider's embed method
         # If model_name is still None, provider will use its own default
         if model_name:
-            return self.provider.embed(texts=texts, model=model_name, **kwargs)
+            return self.provider.embed(texts=texts, model=model_name, **kwargs)  # type: ignore[no-any-return]
         else:
-            return self.provider.embed(texts=texts, **kwargs)
+            return self.provider.embed(texts=texts, **kwargs)  # type: ignore[no-any-return]
 
     def __repr__(self) -> str:
         """Return string representation of LLMClient.

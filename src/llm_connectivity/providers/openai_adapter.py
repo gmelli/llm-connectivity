@@ -17,13 +17,15 @@ Design Principles:
 - Simple streaming (iterator, not context manager)
 - Map all exceptions to unified hierarchy
 """
+
 import os
-from typing import List, Dict, Any, Optional, Iterator, Union
+from collections.abc import Iterator
 from dataclasses import dataclass
+from typing import Any, Optional, Union
 
 from openai import OpenAI
 
-from llm_connectivity.errors import map_openai_exception, LLMError
+from llm_connectivity.errors import map_openai_exception
 from llm_connectivity.retry import retry_with_backoff
 
 
@@ -39,9 +41,10 @@ class ChatResponse:
         provider: Provider name
         raw_response: Original provider response
     """
+
     content: str
     model: str
-    usage: Dict[str, int]  # {prompt_tokens, completion_tokens, total_tokens}
+    usage: dict[str, int]  # {prompt_tokens, completion_tokens, total_tokens}
     cost: Optional[float]
     provider: str = "openai"
     raw_response: Optional[Any] = None
@@ -56,6 +59,7 @@ class StreamChunk:
         finish_reason: Finish reason (if final chunk)
         raw_chunk: Original provider chunk
     """
+
     content: str
     finish_reason: Optional[str] = None
     raw_chunk: Optional[Any] = None
@@ -73,9 +77,10 @@ class EmbeddingResponse:
         provider: Provider name
         raw_response: Original provider response
     """
-    embeddings: List[List[float]]
+
+    embeddings: list[list[float]]
     model: str
-    usage: Dict[str, int]  # {prompt_tokens, total_tokens}
+    usage: dict[str, int]  # {prompt_tokens, total_tokens}
     cost: Optional[float]
     provider: str = "openai"
     raw_response: Optional[Any] = None
@@ -119,7 +124,7 @@ class OpenAIAdapter:
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
         timeout: float = 60.0,
-        max_retries: int = 3
+        max_retries: int = 3,
     ):
         """Initialize OpenAI adapter.
 
@@ -135,10 +140,10 @@ class OpenAIAdapter:
             api_key=api_key or os.getenv("OPENAI_API_KEY"),
             base_url=base_url,
             timeout=timeout,
-            max_retries=0  # We handle retries ourselves via decorator
+            max_retries=0,  # We handle retries ourselves via decorator
         )
 
-    def _estimate_tokens(self, messages: List[Dict[str, str]], model: str) -> int:
+    def _estimate_tokens(self, messages: list[dict[str, str]], model: str) -> int:
         """Estimate token count for messages (pre-request).
 
         Simple heuristic: ~4 chars per token (rough approximation)
@@ -157,7 +162,7 @@ class OpenAIAdapter:
         char_count = len(text)
         return (char_count // 4) + (len(messages) * 10)  # +10 tokens per message for overhead
 
-    def _calculate_cost(self, usage: Dict[str, int], model: str) -> Optional[float]:
+    def _calculate_cost(self, usage: dict[str, int], model: str) -> Optional[float]:
         """Calculate cost for request.
 
         Args:
@@ -186,11 +191,11 @@ class OpenAIAdapter:
     @retry_with_backoff
     def chat(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         model: str = "gpt-4o",
         max_tokens: Optional[int] = None,
         temperature: float = 1.0,
-        **kwargs
+        **kwargs: Any,
     ) -> ChatResponse:
         """Send chat completion request.
 
@@ -215,10 +220,10 @@ class OpenAIAdapter:
             # Call OpenAI API
             response = self.client.chat.completions.create(
                 model=model,
-                messages=messages,
+                messages=messages,  # type: ignore[arg-type]
                 max_tokens=max_tokens,
                 temperature=temperature,
-                **kwargs
+                **kwargs,
             )
 
             # Extract response
@@ -226,34 +231,34 @@ class OpenAIAdapter:
 
             # Post-request token actuals (from API response)
             usage = {
-                "prompt_tokens": response.usage.prompt_tokens,
-                "completion_tokens": response.usage.completion_tokens,
-                "total_tokens": response.usage.total_tokens
+                "prompt_tokens": response.usage.prompt_tokens,  # type: ignore[union-attr]
+                "completion_tokens": response.usage.completion_tokens,  # type: ignore[union-attr]
+                "total_tokens": response.usage.total_tokens,  # type: ignore[union-attr]
             }
 
             # Calculate cost
             cost = self._calculate_cost(usage, model)
 
             return ChatResponse(
-                content=content,
+                content=content or "",
                 model=response.model,
                 usage=usage,
                 cost=cost,
                 provider="openai",
-                raw_response=response
+                raw_response=response,
             )
 
         except Exception as e:
             # Map to unified exception hierarchy
-            raise map_openai_exception(e)
+            raise map_openai_exception(e) from e
 
     def chat_stream(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         model: str = "gpt-4o",
         max_tokens: Optional[int] = None,
         temperature: float = 1.0,
-        **kwargs
+        **kwargs: Any,
     ) -> Iterator[StreamChunk]:
         """Send streaming chat completion request.
 
@@ -280,23 +285,21 @@ class OpenAIAdapter:
             # Call OpenAI streaming API
             stream = self.client.chat.completions.create(
                 model=model,
-                messages=messages,
+                messages=messages,  # type: ignore[arg-type]
                 max_tokens=max_tokens,
                 temperature=temperature,
                 stream=True,
-                **kwargs
+                **kwargs,
             )
 
             # Yield chunks as simple iterator (Pythonic pattern from L002)
             for chunk in stream:
-                delta = chunk.choices[0].delta
-                finish_reason = chunk.choices[0].finish_reason
+                delta = chunk.choices[0].delta  # type: ignore[union-attr]
+                finish_reason = chunk.choices[0].finish_reason  # type: ignore[union-attr]
 
                 if delta.content:
                     yield StreamChunk(
-                        content=delta.content,
-                        finish_reason=finish_reason,
-                        raw_chunk=chunk
+                        content=delta.content, finish_reason=finish_reason, raw_chunk=chunk
                     )
 
                 if finish_reason:
@@ -306,9 +309,9 @@ class OpenAIAdapter:
 
         except Exception as e:
             # Map to unified exception hierarchy
-            raise map_openai_exception(e)
+            raise map_openai_exception(e) from e
 
-    def _calculate_embedding_cost(self, usage: Dict[str, int], model: str) -> Optional[float]:
+    def _calculate_embedding_cost(self, usage: dict[str, int], model: str) -> Optional[float]:
         """Calculate cost for embeddings request.
 
         Args:
@@ -334,10 +337,7 @@ class OpenAIAdapter:
 
     @retry_with_backoff
     def embed(
-        self,
-        texts: Union[str, List[str]],
-        model: str = "text-embedding-3-small",
-        **kwargs
+        self, texts: Union[str, list[str]], model: str = "text-embedding-3-small", **kwargs: Any
     ) -> EmbeddingResponse:
         """Generate embeddings for text(s).
 
@@ -367,11 +367,7 @@ class OpenAIAdapter:
 
         try:
             # Call OpenAI Embeddings API
-            response = self.client.embeddings.create(
-                model=model,
-                input=input_texts,
-                **kwargs
-            )
+            response = self.client.embeddings.create(model=model, input=input_texts, **kwargs)  # type: ignore[arg-type]
 
             # Extract embeddings
             embeddings = [item.embedding for item in response.data]
@@ -379,7 +375,7 @@ class OpenAIAdapter:
             # Extract usage
             usage = {
                 "prompt_tokens": response.usage.prompt_tokens,
-                "total_tokens": response.usage.total_tokens
+                "total_tokens": response.usage.total_tokens,
             }
 
             # Calculate cost
@@ -391,12 +387,12 @@ class OpenAIAdapter:
                 usage=usage,
                 cost=cost,
                 provider="openai",
-                raw_response=response
+                raw_response=response,
             )
 
         except Exception as e:
             # Map to unified exception hierarchy
-            raise map_openai_exception(e)
+            raise map_openai_exception(e) from e
 
     def __repr__(self) -> str:
         """Return string representation of OpenAIAdapter.
