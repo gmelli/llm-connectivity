@@ -476,5 +476,15 @@ class GoogleAdapter:
             # Map to unified exception hierarchy
             raise map_google_exception(e)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Return string representation of GoogleAdapter.
+
+        Returns:
+            String representation showing provider and timeout configuration.
+
+        Example:
+            >>> adapter = GoogleAdapter(timeout=30.0)
+            >>> print(repr(adapter))
+            GoogleAdapter(model=google, timeout=30.0)
+        """
         return f"GoogleAdapter(model=google, timeout={self.timeout})"

@@ -273,5 +273,15 @@ class AnthropicAdapter:
             # Map to unified exception hierarchy
             raise map_anthropic_exception(e)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Return string representation of AnthropicAdapter.
+
+        Returns:
+            String representation showing provider and timeout configuration.
+
+        Example:
+            >>> adapter = AnthropicAdapter(timeout=30.0)
+            >>> print(repr(adapter))
+            AnthropicAdapter(model=anthropic, timeout=30.0)
+        """
         return f"AnthropicAdapter(model=anthropic, timeout={self.client.timeout})"
