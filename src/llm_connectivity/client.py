@@ -259,5 +259,15 @@ class LLMClient:
         else:
             return self.provider.embed(texts=texts, **kwargs)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Return string representation of LLMClient.
+
+        Returns:
+            String representation showing provider and model configuration.
+
+        Example:
+            >>> client = LLMClient(model="openai/gpt-4o")
+            >>> print(repr(client))
+            LLMClient(provider=<OpenAIAdapter>, model=openai/gpt-4o)
+        """
         return f"LLMClient(provider={self.provider}, model={self.model})"
