@@ -5,9 +5,8 @@ with Large Language Model APIs from OpenAI, Anthropic, Google, and more.
 
 Example:
     >>> from llm_connectivity import LLMClient
-    >>> client = LLMClient(provider="openai", api_key="your-key")
+    >>> client = LLMClient(model="openai/gpt-4o")
     >>> response = client.chat(
-    ...     model="gpt-4o",
     ...     messages=[{"role": "user", "content": "Hello!"}]
     ... )
     >>> print(response.content)
@@ -17,11 +16,34 @@ __version__ = "0.0.1"
 __author__ = "Gabor Melli"
 __license__ = "MIT"
 
-# Note: Imports will be added as modules are implemented
-# from .client import LLMClient
-# from .errors import LLMError, RateLimitError, AuthenticationError
+# Public API
+from llm_connectivity.client import LLMClient
+from llm_connectivity.providers.openai_adapter import ChatResponse, StreamChunk, EmbeddingResponse
+from llm_connectivity.errors import (
+    LLMError,
+    AuthenticationError,
+    RateLimitError,
+    ContextWindowExceededError,
+    ValidationError,
+    NetworkError,
+    ProviderError,
+    ModelNotFoundError,
+    InsufficientCreditsError,
+)
 
 __all__ = [
     "__version__",
-    # "LLMClient",  # Coming in v0.1.0-alpha
+    "LLMClient",
+    "ChatResponse",
+    "StreamChunk",
+    "EmbeddingResponse",
+    "LLMError",
+    "AuthenticationError",
+    "RateLimitError",
+    "ContextWindowExceededError",
+    "ValidationError",
+    "NetworkError",
+    "ProviderError",
+    "ModelNotFoundError",
+    "InsufficientCreditsError",
 ]
