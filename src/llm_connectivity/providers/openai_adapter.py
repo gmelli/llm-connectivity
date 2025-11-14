@@ -104,10 +104,11 @@ class OpenAIAdapter:
 
     # Chat pricing per 1K tokens (as of 2025-11-14)
     # Source: https://openai.com/pricing
+    # Note: Order matters! More specific models first (gpt-4o before gpt-4)
     PRICING = {
-        "gpt-4": {"prompt": 0.03, "completion": 0.06},
-        "gpt-4-turbo": {"prompt": 0.01, "completion": 0.03},
         "gpt-4o": {"prompt": 0.005, "completion": 0.015},
+        "gpt-4-turbo": {"prompt": 0.01, "completion": 0.03},
+        "gpt-4": {"prompt": 0.03, "completion": 0.06},
         "gpt-3.5-turbo": {"prompt": 0.0005, "completion": 0.0015},
     }
 
