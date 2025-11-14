@@ -22,13 +22,38 @@ class LLMError(Exception):
         provider: Optional[str] = None,
         provider_error: Optional[Exception] = None,
         details: Optional[Dict[str, Any]] = None
-    ):
+    ) -> None:
+        """Initialize LLM error with context.
+
+        Args:
+            message: Human-readable error message
+            provider: Provider name (e.g., "openai", "anthropic", "google")
+            provider_error: Original exception from provider SDK
+            details: Additional error context (optional)
+
+        Example:
+            >>> error = LLMError(
+            ...     "API request failed",
+            ...     provider="openai",
+            ...     provider_error=original_error
+            ... )
+        """
         super().__init__(message)
         self.provider = provider
         self.provider_error = provider_error
         self.details = details or {}
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Return formatted error message with provider context.
+
+        Returns:
+            Error message including provider name and original error if available.
+
+        Example:
+            >>> error = RateLimitError("Rate limit exceeded", provider="openai")
+            >>> str(error)
+            'Rate limit exceeded [Provider: openai]'
+        """
         parts = [super().__str__()]
         if self.provider:
             parts.append(f"[Provider: {self.provider}]")
