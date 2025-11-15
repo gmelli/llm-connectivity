@@ -6,15 +6,15 @@ Target: 95%+ coverage on google_adapter.py
 Note: Google API has different structure than OpenAI/Anthropic
 """
 
+from unittest.mock import Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+
 from llm_connectivity.providers.google_adapter import (
-    GoogleAdapter,
     ChatResponse,
-    StreamChunk,
     EmbeddingResponse,
+    GoogleAdapter,
 )
-from llm_connectivity.errors import RateLimitError, ValidationError
 
 
 class TestGoogleAdapterInitialization:

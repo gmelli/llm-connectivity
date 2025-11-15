@@ -4,9 +4,9 @@ Pytest Fixtures for LLM Connectivity Tests
 Provides reusable test fixtures for mocking provider responses and creating test clients.
 """
 
-import pytest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import MagicMock, Mock
 
+import pytest
 
 # ==================== Mock Response Fixtures ====================
 

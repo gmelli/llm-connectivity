@@ -5,18 +5,16 @@ Tests Anthropic adapter functionality with mocked API responses.
 Target: 95%+ coverage on anthropic_adapter.py
 """
 
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+
+from llm_connectivity.errors import (
+    RateLimitError,
+)
 from llm_connectivity.providers.anthropic_adapter import (
     AnthropicAdapter,
     ChatResponse,
-    StreamChunk,
-)
-from llm_connectivity.errors import (
-    RateLimitError,
-    AuthenticationError,
-    NetworkError,
-    ModelNotFoundError,
 )
 
 

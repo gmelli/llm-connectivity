@@ -5,21 +5,21 @@ Tests unified exception hierarchy and provider exception mapping.
 Target: 95%+ coverage on errors.py
 """
 
-import pytest
 from unittest.mock import Mock
+
 from llm_connectivity.errors import (
-    LLMError,
     AuthenticationError,
-    RateLimitError,
     ContextWindowExceededError,
-    ValidationError,
+    InsufficientCreditsError,
+    LLMError,
+    ModelNotFoundError,
     NetworkError,
     ProviderError,
-    ModelNotFoundError,
-    InsufficientCreditsError,
-    map_openai_exception,
+    RateLimitError,
+    ValidationError,
     map_anthropic_exception,
     map_google_exception,
+    map_openai_exception,
 )
 
 

@@ -5,21 +5,17 @@ Tests OpenAI adapter functionality with mocked API responses.
 Target: 95%+ coverage on openai_adapter.py
 """
 
+from unittest.mock import Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
-from llm_connectivity.providers.openai_adapter import (
-    OpenAIAdapter,
-    ChatResponse,
-    StreamChunk,
-    EmbeddingResponse,
-)
+
 from llm_connectivity.errors import (
     RateLimitError,
-    AuthenticationError,
-    NetworkError,
-    ModelNotFoundError,
-    ContextWindowExceededError,
-    ValidationError,
+)
+from llm_connectivity.providers.openai_adapter import (
+    ChatResponse,
+    EmbeddingResponse,
+    OpenAIAdapter,
 )
 
 

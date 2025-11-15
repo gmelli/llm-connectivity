@@ -6,6 +6,7 @@ Estimated total cost: ~$0.03-0.05
 """
 
 import pytest
+
 from llm_connectivity.client import LLMClient
 from llm_connectivity.errors import AuthenticationError, ValidationError
 

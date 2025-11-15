@@ -5,24 +5,24 @@ Tests retry logic with differentiated exponential backoff.
 Target: 95%+ coverage on retry.py
 """
 
-import pytest
 from unittest.mock import Mock, patch
-from llm_connectivity.retry import (
-    RetryStrategy,
-    RETRY_STRATEGIES,
-    NON_RETRYABLE_ERRORS,
-    get_retry_strategy,
-    calculate_backoff,
-    retry_with_backoff,
-)
+
+import pytest
+
 from llm_connectivity.errors import (
+    AuthenticationError,
+    ContextWindowExceededError,
+    ModelNotFoundError,
+    NetworkError,
+    ProviderError,
     RateLimitError,
     ValidationError,
-    NetworkError,
-    ContextWindowExceededError,
-    AuthenticationError,
-    ModelNotFoundError,
-    ProviderError,
+)
+from llm_connectivity.retry import (
+    RetryStrategy,
+    calculate_backoff,
+    get_retry_strategy,
+    retry_with_backoff,
 )
 
 

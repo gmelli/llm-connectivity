@@ -6,8 +6,9 @@ Estimated total cost: ~$0.05-0.10
 """
 
 import pytest
+
 from llm_connectivity.client import LLMClient
-from llm_connectivity.errors import RateLimitError, AuthenticationError
+from llm_connectivity.errors import AuthenticationError
 
 
 class TestOpenAIRealChat:
@@ -115,7 +116,7 @@ class TestOpenAIRealErrorHandling:
         Test that excessive token request raises appropriate error.
         Estimated cost: $0.00 (fails validation)
         """
-        from llm_connectivity.errors import ValidationError, ContextWindowExceededError
+        from llm_connectivity.errors import ContextWindowExceededError, ValidationError
 
         client = LLMClient(model="openai/gpt-4o-mini")
 

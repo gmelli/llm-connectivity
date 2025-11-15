@@ -5,12 +5,13 @@ Tests unified client interface with mocked provider adapters.
 Target: 95%+ coverage on client.py
 """
 
+from unittest.mock import Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
-from llm_connectivity.client import LLMClient, ChatResponse, StreamChunk, EmbeddingResponse
-from llm_connectivity.providers.openai_adapter import OpenAIAdapter
+
+from llm_connectivity.client import ChatResponse, EmbeddingResponse, LLMClient, StreamChunk
 from llm_connectivity.providers.anthropic_adapter import AnthropicAdapter
-from llm_connectivity.providers.google_adapter import GoogleAdapter
+from llm_connectivity.providers.openai_adapter import OpenAIAdapter
 
 
 class TestLLMClientInitialization:
@@ -61,7 +62,7 @@ class TestLLMClientInitialization:
     def test_init_with_kwargs_passed_to_provider(self):
         """Test that kwargs are passed to provider adapter."""
         with patch("llm_connectivity.client.OpenAIAdapter") as mock_adapter_class:
-            client = LLMClient(model="openai/gpt-4o", timeout=120, max_retries=5)
+            _client = LLMClient(model="openai/gpt-4o", timeout=120, max_retries=5)
 
             mock_adapter_class.assert_called_once_with(timeout=120, max_retries=5)
 
@@ -146,7 +147,7 @@ class TestLLMClientChat:
 
             client = LLMClient(model="openai/gpt-4o")
             messages = [{"role": "user", "content": "Hello"}]
-            response = client.chat(messages, model="openai/gpt-3.5-turbo")
+            _response = client.chat(messages, model="openai/gpt-3.5-turbo")
 
             # Should use gpt-3.5-turbo, not gpt-4o
             mock_adapter.chat.assert_called_once_with(
