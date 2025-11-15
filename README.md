@@ -1,7 +1,8 @@
 # LLM Connectivity
 
-![Tests](https://img.shields.io/badge/tests-134%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)
+[![Tests](https://github.com/gmelli/llm-connectivity/actions/workflows/test.yml/badge.svg)](https://github.com/gmelli/llm-connectivity/actions/workflows/test.yml)
+[![Lint](https://github.com/gmelli/llm-connectivity/actions/workflows/lint.yml/badge.svg)](https://github.com/gmelli/llm-connectivity/actions/workflows/lint.yml)
+[![codecov](https://codecov.io/gh/gmelli/llm-connectivity/branch/main/graph/badge.svg)](https://codecov.io/gh/gmelli/llm-connectivity)
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
