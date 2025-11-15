@@ -34,7 +34,7 @@ class TestAnthropicAdapterInitialization:
         adapter = AnthropicAdapter(api_key="sk-ant-test123", timeout=120.0)
         assert adapter.client.timeout == 120.0
 
-    @patch.dict('os.environ', {'ANTHROPIC_API_KEY': 'sk-ant-env-key'})
+    @patch.dict("os.environ", {"ANTHROPIC_API_KEY": "sk-ant-env-key"})
     def test_init_from_env_var(self):
         """Test initialization from environment variable."""
         adapter = AnthropicAdapter()
@@ -44,7 +44,7 @@ class TestAnthropicAdapterInitialization:
 class TestAnthropicAdapterChat:
     """Test Anthropic chat completion."""
 
-    @patch('llm_connectivity.providers.anthropic_adapter.Anthropic')
+    @patch("llm_connectivity.providers.anthropic_adapter.Anthropic")
     def test_chat_success(self, mock_anthropic_class, mock_anthropic_chat_response):
         """Test successful chat completion."""
         # Setup mock
@@ -68,7 +68,7 @@ class TestAnthropicAdapterChat:
         assert response.provider == "anthropic"
         assert response.cost is not None
 
-    @patch('llm_connectivity.providers.anthropic_adapter.Anthropic')
+    @patch("llm_connectivity.providers.anthropic_adapter.Anthropic")
     def test_chat_with_max_tokens(self, mock_anthropic_class):
         """Test chat with max_tokens parameter (required by Anthropic)."""
         mock_client = Mock()
@@ -93,7 +93,7 @@ class TestAnthropicAdapterChat:
         call_kwargs = mock_client.messages.create.call_args[1]
         assert call_kwargs["max_tokens"] == 100
 
-    @patch('llm_connectivity.providers.anthropic_adapter.Anthropic')
+    @patch("llm_connectivity.providers.anthropic_adapter.Anthropic")
     def test_chat_rate_limit_error(self, mock_anthropic_class):
         """Test chat with rate limit error."""
         from anthropic import RateLimitError as AnthropicRateLimitError
@@ -104,9 +104,7 @@ class TestAnthropicAdapterChat:
         # Create mock error (Anthropic SDK requires response and body)
         mock_response = Mock()
         mock_error = AnthropicRateLimitError(
-            "Rate limit exceeded",
-            response=mock_response,
-            body=None
+            "Rate limit exceeded", response=mock_response, body=None
         )
         mock_client.messages.create.side_effect = mock_error
 
@@ -125,7 +123,7 @@ class TestAnthropicAdapterChat:
 class TestAnthropicAdapterChatStream:
     """Test Anthropic streaming chat completion."""
 
-    @patch('llm_connectivity.providers.anthropic_adapter.Anthropic')
+    @patch("llm_connectivity.providers.anthropic_adapter.Anthropic")
     def test_chat_stream_success(self, mock_anthropic_class):
         """Test successful streaming chat completion."""
         mock_client = Mock()
@@ -163,7 +161,7 @@ class TestAnthropicAdapterCostCalculation:
         usage = {
             "prompt_tokens": 1_000_000,
             "completion_tokens": 1_000_000,
-            "total_tokens": 2_000_000
+            "total_tokens": 2_000_000,
         }
 
         cost = adapter._calculate_cost(usage, "claude-3-opus-20240229")
@@ -176,11 +174,7 @@ class TestAnthropicAdapterCostCalculation:
         """Test cost calculation for unknown model."""
         adapter = AnthropicAdapter(api_key="sk-ant-test123")
 
-        usage = {
-            "prompt_tokens": 1000,
-            "completion_tokens": 2000,
-            "total_tokens": 3000
-        }
+        usage = {"prompt_tokens": 1000, "completion_tokens": 2000, "total_tokens": 3000}
 
         cost = adapter._calculate_cost(usage, "unknown-model")
         assert cost is None
@@ -193,9 +187,7 @@ class TestAnthropicAdapterTokenEstimation:
         """Test token estimation for messages."""
         adapter = AnthropicAdapter(api_key="sk-ant-test123")
 
-        messages = [
-            {"role": "user", "content": "Hello world this is a test"}
-        ]
+        messages = [{"role": "user", "content": "Hello world this is a test"}]
 
         estimated = adapter._estimate_tokens(messages, "claude-3-opus-20240229")
 

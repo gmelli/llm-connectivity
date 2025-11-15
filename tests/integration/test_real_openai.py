@@ -69,10 +69,12 @@ class TestOpenAIRealStreaming:
         Estimated cost: ~$0.01
         """
         client = LLMClient(model="openai/gpt-4o-mini")
-        chunks = list(client.chat_stream(
-            messages=[{"role": "user", "content": "Count to 3"}],
-            max_tokens=15,
-        ))
+        chunks = list(
+            client.chat_stream(
+                messages=[{"role": "user", "content": "Count to 3"}],
+                max_tokens=15,
+            )
+        )
 
         # Verify streaming worked
         assert len(chunks) > 0, "Should receive multiple chunks"

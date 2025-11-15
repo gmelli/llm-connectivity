@@ -126,7 +126,9 @@ class TestMapOpenAIException:
         """Test mapping OpenAI AuthenticationError."""
         from openai import AuthenticationError as OpenAIAuthError
 
-        original_error = OpenAIAuthError("Invalid API key", response=create_mock_response(), body=None)
+        original_error = OpenAIAuthError(
+            "Invalid API key", response=create_mock_response(), body=None
+        )
 
         mapped = map_openai_exception(original_error)
 
@@ -139,7 +141,9 @@ class TestMapOpenAIException:
         """Test mapping OpenAI RateLimitError."""
         from openai import RateLimitError as OpenAIRateLimitError
 
-        original_error = OpenAIRateLimitError("Rate limit exceeded", response=create_mock_response(), body=None)
+        original_error = OpenAIRateLimitError(
+            "Rate limit exceeded", response=create_mock_response(), body=None
+        )
 
         mapped = map_openai_exception(original_error)
 
@@ -162,7 +166,9 @@ class TestMapOpenAIException:
         """Test mapping OpenAI NotFoundError."""
         from openai import NotFoundError
 
-        original_error = NotFoundError("Model not found", response=create_mock_response(), body=None)
+        original_error = NotFoundError(
+            "Model not found", response=create_mock_response(), body=None
+        )
 
         mapped = map_openai_exception(original_error)
 
@@ -174,9 +180,7 @@ class TestMapOpenAIException:
         from openai import BadRequestError
 
         original_error = BadRequestError(
-            "Maximum context length exceeded",
-            response=create_mock_response(),
-            body=None
+            "Maximum context length exceeded", response=create_mock_response(), body=None
         )
 
         mapped = map_openai_exception(original_error)
@@ -188,7 +192,9 @@ class TestMapOpenAIException:
         """Test mapping OpenAI BadRequestError without context/token keywords."""
         from openai import BadRequestError
 
-        original_error = BadRequestError("Invalid parameter", response=create_mock_response(), body=None)
+        original_error = BadRequestError(
+            "Invalid parameter", response=create_mock_response(), body=None
+        )
 
         mapped = map_openai_exception(original_error)
 
@@ -213,7 +219,9 @@ class TestMapAnthropicException:
         """Test mapping Anthropic AuthenticationError."""
         from anthropic import AuthenticationError as AnthropicAuthError
 
-        original_error = AnthropicAuthError("Invalid API key", response=create_mock_response(), body=None)
+        original_error = AnthropicAuthError(
+            "Invalid API key", response=create_mock_response(), body=None
+        )
 
         mapped = map_anthropic_exception(original_error)
 
@@ -225,7 +233,9 @@ class TestMapAnthropicException:
         """Test mapping Anthropic RateLimitError."""
         from anthropic import RateLimitError as AnthropicRateLimitError
 
-        original_error = AnthropicRateLimitError("Rate limit exceeded", response=create_mock_response(), body=None)
+        original_error = AnthropicRateLimitError(
+            "Rate limit exceeded", response=create_mock_response(), body=None
+        )
 
         mapped = map_anthropic_exception(original_error)
 
@@ -247,7 +257,9 @@ class TestMapAnthropicException:
         """Test mapping Anthropic NotFoundError."""
         from anthropic import NotFoundError as AnthropicNotFoundError
 
-        original_error = AnthropicNotFoundError("Model not found", response=create_mock_response(), body=None)
+        original_error = AnthropicNotFoundError(
+            "Model not found", response=create_mock_response(), body=None
+        )
 
         mapped = map_anthropic_exception(original_error)
 
@@ -259,9 +271,7 @@ class TestMapAnthropicException:
         from anthropic import BadRequestError as AnthropicBadRequestError
 
         original_error = AnthropicBadRequestError(
-            "Context length exceeded",
-            response=create_mock_response(),
-            body=None
+            "Context length exceeded", response=create_mock_response(), body=None
         )
 
         mapped = map_anthropic_exception(original_error)
@@ -273,7 +283,9 @@ class TestMapAnthropicException:
         """Test mapping Anthropic BadRequestError."""
         from anthropic import BadRequestError as AnthropicBadRequestError
 
-        original_error = AnthropicBadRequestError("Invalid request", response=create_mock_response(), body=None)
+        original_error = AnthropicBadRequestError(
+            "Invalid request", response=create_mock_response(), body=None
+        )
 
         mapped = map_anthropic_exception(original_error)
 

@@ -37,7 +37,7 @@ class TestOpenAIAdapterInitialization:
         adapter = OpenAIAdapter(api_key="sk-test123", timeout=120.0)
         assert adapter.client.timeout == 120.0
 
-    @patch.dict('os.environ', {'OPENAI_API_KEY': 'sk-env-key'})
+    @patch.dict("os.environ", {"OPENAI_API_KEY": "sk-env-key"})
     def test_init_from_env_var(self):
         """Test initialization from environment variable."""
         adapter = OpenAIAdapter()
@@ -47,7 +47,7 @@ class TestOpenAIAdapterInitialization:
 class TestOpenAIAdapterChat:
     """Test OpenAI chat completion."""
 
-    @patch('llm_connectivity.providers.openai_adapter.OpenAI')
+    @patch("llm_connectivity.providers.openai_adapter.OpenAI")
     def test_chat_success(self, mock_openai_class, mock_openai_chat_response):
         """Test successful chat completion."""
         # Setup mock
@@ -72,17 +72,17 @@ class TestOpenAIAdapterChat:
         assert response.provider == "openai"
         assert response.cost is not None
 
-    @patch('llm_connectivity.providers.openai_adapter.OpenAI')
+    @patch("llm_connectivity.providers.openai_adapter.OpenAI")
     def test_chat_with_max_tokens(self, mock_openai_class):
         """Test chat with max_tokens parameter."""
         mock_client = Mock()
         mock_openai_class.return_value = mock_client
-        
+
         adapter = OpenAIAdapter(api_key="sk-test123")
         adapter.client = mock_client
 
         messages = [{"role": "user", "content": "Hello"}]
-        
+
         # Mock response
         mock_response = Mock()
         mock_response.choices = [Mock()]
@@ -97,7 +97,7 @@ class TestOpenAIAdapterChat:
         call_kwargs = mock_client.chat.completions.create.call_args[1]
         assert call_kwargs["max_tokens"] == 100
 
-    @patch('llm_connectivity.providers.openai_adapter.OpenAI')
+    @patch("llm_connectivity.providers.openai_adapter.OpenAI")
     def test_chat_rate_limit_error(self, mock_openai_class):
         """Test chat with rate limit error."""
         from openai import RateLimitError as OpenAIRateLimitError
@@ -107,11 +107,7 @@ class TestOpenAIAdapterChat:
 
         # Create a mock RateLimitError (OpenAI SDK requires response and body)
         mock_response = Mock()
-        mock_error = OpenAIRateLimitError(
-            "Rate limit exceeded",
-            response=mock_response,
-            body=None
-        )
+        mock_error = OpenAIRateLimitError("Rate limit exceeded", response=mock_response, body=None)
         mock_client.chat.completions.create.side_effect = mock_error
 
         adapter = OpenAIAdapter(api_key="sk-test123")
@@ -129,7 +125,7 @@ class TestOpenAIAdapterChat:
 class TestOpenAIAdapterChatStream:
     """Test OpenAI streaming chat completion."""
 
-    @patch('llm_connectivity.providers.openai_adapter.OpenAI')
+    @patch("llm_connectivity.providers.openai_adapter.OpenAI")
     def test_chat_stream_success(self, mock_openai_class):
         """Test successful streaming chat completion."""
         # Setup mock stream
@@ -169,7 +165,7 @@ class TestOpenAIAdapterChatStream:
 class TestOpenAIAdapterEmbeddings:
     """Test OpenAI embeddings."""
 
-    @patch('llm_connectivity.providers.openai_adapter.OpenAI')
+    @patch("llm_connectivity.providers.openai_adapter.OpenAI")
     def test_embed_single_text(self, mock_openai_class, mock_openai_embedding_response):
         """Test embedding single text."""
         mock_client = Mock()
@@ -188,7 +184,7 @@ class TestOpenAIAdapterEmbeddings:
         assert response.usage["prompt_tokens"] == 5
         assert response.provider == "openai"
 
-    @patch('llm_connectivity.providers.openai_adapter.OpenAI')
+    @patch("llm_connectivity.providers.openai_adapter.OpenAI")
     def test_embed_multiple_texts(self, mock_openai_class, mock_openai_embedding_response):
         """Test embedding multiple texts (batch)."""
         mock_client = Mock()
@@ -213,15 +209,11 @@ class TestOpenAIAdapterCostCalculation:
     def test_calculate_cost_gpt4o(self):
         """Test cost calculation for GPT-4o."""
         adapter = OpenAIAdapter(api_key="sk-test123")
-        
-        usage = {
-            "prompt_tokens": 1000,
-            "completion_tokens": 2000,
-            "total_tokens": 3000
-        }
-        
+
+        usage = {"prompt_tokens": 1000, "completion_tokens": 2000, "total_tokens": 3000}
+
         cost = adapter._calculate_cost(usage, "gpt-4o")
-        
+
         # GPT-4o: $0.005 per 1K prompt, $0.015 per 1K completion
         expected = (1000 / 1000) * 0.005 + (2000 / 1000) * 0.015
         assert cost == pytest.approx(expected, rel=1e-6)
@@ -229,13 +221,9 @@ class TestOpenAIAdapterCostCalculation:
     def test_calculate_cost_unknown_model(self):
         """Test cost calculation for unknown model."""
         adapter = OpenAIAdapter(api_key="sk-test123")
-        
-        usage = {
-            "prompt_tokens": 1000,
-            "completion_tokens": 2000,
-            "total_tokens": 3000
-        }
-        
+
+        usage = {"prompt_tokens": 1000, "completion_tokens": 2000, "total_tokens": 3000}
+
         cost = adapter._calculate_cost(usage, "unknown-model")
         assert cost is None
 
@@ -246,13 +234,11 @@ class TestOpenAIAdapterTokenEstimation:
     def test_estimate_tokens(self):
         """Test token estimation for messages."""
         adapter = OpenAIAdapter(api_key="sk-test123")
-        
-        messages = [
-            {"role": "user", "content": "Hello world this is a test"}
-        ]
-        
+
+        messages = [{"role": "user", "content": "Hello world this is a test"}]
+
         estimated = adapter._estimate_tokens(messages, "gpt-4o")
-        
+
         # Should be > 0 (rough estimate based on char count)
         assert estimated > 0
         assert isinstance(estimated, int)
@@ -265,7 +251,7 @@ class TestOpenAIAdapterRepr:
         """Test string representation."""
         adapter = OpenAIAdapter(api_key="sk-test123", timeout=30.0)
         repr_str = repr(adapter)
-        
+
         assert "OpenAIAdapter" in repr_str
         assert "openai" in repr_str
         assert "30.0" in repr_str

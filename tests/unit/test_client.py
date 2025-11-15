@@ -18,7 +18,7 @@ class TestLLMClientInitialization:
 
     def test_init_with_model_string_openai(self):
         """Test initialization with OpenAI model string."""
-        with patch('llm_connectivity.client.OpenAIAdapter') as mock_adapter_class:
+        with patch("llm_connectivity.client.OpenAIAdapter") as mock_adapter_class:
             mock_adapter = Mock()
             mock_adapter_class.return_value = mock_adapter
 
@@ -30,7 +30,7 @@ class TestLLMClientInitialization:
 
     def test_init_with_model_string_anthropic(self):
         """Test initialization with Anthropic model string."""
-        with patch('llm_connectivity.client.AnthropicAdapter') as mock_adapter_class:
+        with patch("llm_connectivity.client.AnthropicAdapter") as mock_adapter_class:
             mock_adapter = Mock()
             mock_adapter_class.return_value = mock_adapter
 
@@ -41,7 +41,7 @@ class TestLLMClientInitialization:
 
     def test_init_with_model_string_google(self):
         """Test initialization with Google model string."""
-        with patch('llm_connectivity.client.GoogleAdapter') as mock_adapter_class:
+        with patch("llm_connectivity.client.GoogleAdapter") as mock_adapter_class:
             mock_adapter = Mock()
             mock_adapter_class.return_value = mock_adapter
 
@@ -60,7 +60,7 @@ class TestLLMClientInitialization:
 
     def test_init_with_kwargs_passed_to_provider(self):
         """Test that kwargs are passed to provider adapter."""
-        with patch('llm_connectivity.client.OpenAIAdapter') as mock_adapter_class:
+        with patch("llm_connectivity.client.OpenAIAdapter") as mock_adapter_class:
             client = LLMClient(model="openai/gpt-4o", timeout=120, max_retries=5)
 
             mock_adapter_class.assert_called_once_with(timeout=120, max_retries=5)
@@ -95,7 +95,7 @@ class TestLLMClientChat:
             provider="openai",
         )
 
-        with patch('llm_connectivity.client.OpenAIAdapter') as mock_adapter_class:
+        with patch("llm_connectivity.client.OpenAIAdapter") as mock_adapter_class:
             mock_adapter = Mock()
             mock_adapter_class.return_value = mock_adapter
             mock_adapter.chat.return_value = mock_response
@@ -139,7 +139,7 @@ class TestLLMClientChat:
 
     def test_chat_with_model_override(self, mock_openai_chat_response):
         """Test chat with model parameter overriding client model."""
-        with patch('llm_connectivity.client.OpenAIAdapter') as mock_adapter_class:
+        with patch("llm_connectivity.client.OpenAIAdapter") as mock_adapter_class:
             mock_adapter = Mock()
             mock_adapter_class.return_value = mock_adapter
             mock_adapter.chat.return_value = mock_openai_chat_response
@@ -158,7 +158,7 @@ class TestLLMClientChat:
 
     def test_chat_with_parameters(self, mock_openai_chat_response):
         """Test chat with max_tokens and temperature."""
-        with patch('llm_connectivity.client.OpenAIAdapter') as mock_adapter_class:
+        with patch("llm_connectivity.client.OpenAIAdapter") as mock_adapter_class:
             mock_adapter = Mock()
             mock_adapter_class.return_value = mock_adapter
             mock_adapter.chat.return_value = mock_openai_chat_response
@@ -180,7 +180,7 @@ class TestLLMClientChatStream:
 
     def test_chat_stream_success(self):
         """Test successful streaming chat completion."""
-        with patch('llm_connectivity.client.OpenAIAdapter') as mock_adapter_class:
+        with patch("llm_connectivity.client.OpenAIAdapter") as mock_adapter_class:
             mock_adapter = Mock()
             mock_adapter_class.return_value = mock_adapter
 
@@ -213,7 +213,7 @@ class TestLLMClientEmbed:
             provider="openai",
         )
 
-        with patch('llm_connectivity.client.OpenAIAdapter') as mock_adapter_class:
+        with patch("llm_connectivity.client.OpenAIAdapter") as mock_adapter_class:
             mock_adapter = Mock()
             mock_adapter_class.return_value = mock_adapter
             mock_adapter.embed.return_value = mock_response
@@ -236,7 +236,7 @@ class TestLLMClientEmbed:
             provider="openai",
         )
 
-        with patch('llm_connectivity.client.OpenAIAdapter') as mock_adapter_class:
+        with patch("llm_connectivity.client.OpenAIAdapter") as mock_adapter_class:
             mock_adapter = Mock()
             mock_adapter_class.return_value = mock_adapter
             mock_adapter.embed.return_value = mock_response
@@ -246,13 +246,11 @@ class TestLLMClientEmbed:
             response = client.embed(texts)
 
             assert len(response.embeddings) == 2
-            mock_adapter.embed.assert_called_once_with(
-                texts=texts, model="text-embedding-3-small"
-            )
+            mock_adapter.embed.assert_called_once_with(texts=texts, model="text-embedding-3-small")
 
     def test_embed_with_model_override(self, mock_openai_embedding_response):
         """Test embedding with model parameter override."""
-        with patch('llm_connectivity.client.OpenAIAdapter') as mock_adapter_class:
+        with patch("llm_connectivity.client.OpenAIAdapter") as mock_adapter_class:
             mock_adapter = Mock()
             mock_adapter_class.return_value = mock_adapter
             mock_adapter.embed.return_value = mock_openai_embedding_response
@@ -261,9 +259,7 @@ class TestLLMClientEmbed:
             client.embed("Test", model="openai/text-embedding-3-large")
 
             # Should use text-embedding-3-large
-            mock_adapter.embed.assert_called_once_with(
-                texts="Test", model="text-embedding-3-large"
-            )
+            mock_adapter.embed.assert_called_once_with(texts="Test", model="text-embedding-3-large")
 
     def test_embed_with_no_model_uses_default(self, mock_openai_embedding_response):
         """Test embedding without model uses provider default."""
@@ -281,7 +277,7 @@ class TestLLMClientEmbed:
         # Anthropic doesn't have embed method
         mock_provider = Mock(spec=AnthropicAdapter)
         # Remove embed attribute to simulate unsupported feature
-        delattr(mock_provider, 'embed')
+        delattr(mock_provider, "embed")
 
         client = LLMClient(provider=mock_provider)
 
@@ -294,7 +290,7 @@ class TestLLMClientRepr:
 
     def test_repr_with_model_string(self):
         """Test string representation with model string."""
-        with patch('llm_connectivity.client.OpenAIAdapter'):
+        with patch("llm_connectivity.client.OpenAIAdapter"):
             client = LLMClient(model="openai/gpt-4o")
             repr_str = repr(client)
 

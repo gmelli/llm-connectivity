@@ -10,6 +10,7 @@ from unittest.mock import Mock, MagicMock
 
 # ==================== Mock Response Fixtures ====================
 
+
 @pytest.fixture
 def mock_openai_chat_response():
     """Mock OpenAI chat completion response."""
@@ -75,6 +76,7 @@ def mock_google_chat_response():
 
 # ==================== Test Data Fixtures ====================
 
+
 @pytest.fixture
 def sample_messages():
     """Sample chat messages for testing."""
@@ -91,6 +93,7 @@ def sample_texts():
 
 
 # ==================== Client Fixtures ====================
+
 
 @pytest.fixture
 def mock_openai_client():

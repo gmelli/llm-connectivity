@@ -31,12 +31,7 @@ class TestRetryStrategy:
 
     def test_retry_strategy_creation(self):
         """Test creating RetryStrategy with all parameters."""
-        strategy = RetryStrategy(
-            multiplier=2.0,
-            min_delay=1.0,
-            max_delay=120.0,
-            max_retries=3
-        )
+        strategy = RetryStrategy(multiplier=2.0, min_delay=1.0, max_delay=120.0, max_retries=3)
         assert strategy.multiplier == 2.0
         assert strategy.min_delay == 1.0
         assert strategy.max_delay == 120.0
@@ -44,11 +39,7 @@ class TestRetryStrategy:
 
     def test_retry_strategy_defaults(self):
         """Test RetryStrategy with default max_retries."""
-        strategy = RetryStrategy(
-            multiplier=1.5,
-            min_delay=2.0,
-            max_delay=30.0
-        )
+        strategy = RetryStrategy(multiplier=1.5, min_delay=2.0, max_delay=30.0)
         assert strategy.max_retries == 3  # Default value
 
 
@@ -135,19 +126,21 @@ class TestCalculateBackoff:
         strategy = RetryStrategy(multiplier=2.0, min_delay=1.0, max_delay=120.0)
 
         # Exponential: delay = min_delay * (multiplier ** (attempt - 1))
-        assert calculate_backoff(1, strategy) == 1.0   # 1.0 * (2.0 ** 0) = 1.0
-        assert calculate_backoff(2, strategy) == 2.0   # 1.0 * (2.0 ** 1) = 2.0
-        assert calculate_backoff(3, strategy) == 4.0   # 1.0 * (2.0 ** 2) = 4.0
-        assert calculate_backoff(4, strategy) == 8.0   # 1.0 * (2.0 ** 3) = 8.0
+        assert calculate_backoff(1, strategy) == 1.0  # 1.0 * (2.0 ** 0) = 1.0
+        assert calculate_backoff(2, strategy) == 2.0  # 1.0 * (2.0 ** 1) = 2.0
+        assert calculate_backoff(3, strategy) == 4.0  # 1.0 * (2.0 ** 2) = 4.0
+        assert calculate_backoff(4, strategy) == 8.0  # 1.0 * (2.0 ** 3) = 8.0
 
     def test_moderate_exponential_backoff(self):
         """Test moderate exponential backoff (multiplier=1.5)."""
         strategy = RetryStrategy(multiplier=1.5, min_delay=2.0, max_delay=30.0)
 
         # Exponential: delay = min_delay * (multiplier ** (attempt - 1))
-        assert calculate_backoff(1, strategy) == 2.0    # 2.0 * (1.5 ** 0) = 2.0
-        assert calculate_backoff(2, strategy) == 3.0    # 2.0 * (1.5 ** 1) = 3.0
-        assert calculate_backoff(3, strategy) == pytest.approx(4.5, rel=1e-9)  # 2.0 * (1.5 ** 2) = 4.5
+        assert calculate_backoff(1, strategy) == 2.0  # 2.0 * (1.5 ** 0) = 2.0
+        assert calculate_backoff(2, strategy) == 3.0  # 2.0 * (1.5 ** 1) = 3.0
+        assert calculate_backoff(3, strategy) == pytest.approx(
+            4.5, rel=1e-9
+        )  # 2.0 * (1.5 ** 2) = 4.5
 
     def test_max_delay_clamping(self):
         """Test that delay is clamped to max_delay."""
@@ -188,15 +181,17 @@ class TestRetryWithBackoffDecorator:
 
         assert mock_func.call_count == 1  # Called only once, no retries
 
-    @patch('time.sleep')
+    @patch("time.sleep")
     def test_retryable_error_with_retries(self, mock_sleep):
         """Test that retryable error triggers retries with backoff."""
         # Fail 2 times, succeed on 3rd attempt
-        mock_func = Mock(side_effect=[
-            RateLimitError("Rate limit", provider="openai"),
-            RateLimitError("Rate limit", provider="openai"),
-            "success"
-        ])
+        mock_func = Mock(
+            side_effect=[
+                RateLimitError("Rate limit", provider="openai"),
+                RateLimitError("Rate limit", provider="openai"),
+                "success",
+            ]
+        )
         decorated = retry_with_backoff(mock_func)
 
         result = decorated()
@@ -212,7 +207,7 @@ class TestRetryWithBackoffDecorator:
         assert mock_sleep.call_args_list[0][0][0] == 1.0
         assert mock_sleep.call_args_list[1][0][0] == 2.0
 
-    @patch('time.sleep')
+    @patch("time.sleep")
     def test_max_retries_exhausted_raises_last_error(self, mock_sleep):
         """Test that exceeding max retries raises the last error."""
         # Fail all attempts (initial + 3 retries = 4 total)
@@ -228,13 +223,10 @@ class TestRetryWithBackoffDecorator:
         # 3 retries = 3 sleeps
         assert mock_sleep.call_count == 3
 
-    @patch('time.sleep')
+    @patch("time.sleep")
     def test_differentiated_backoff_rate_limit(self, mock_sleep):
         """Test rate limit error uses aggressive backoff (2x)."""
-        mock_func = Mock(side_effect=[
-            RateLimitError("Rate limit", provider="openai"),
-            "success"
-        ])
+        mock_func = Mock(side_effect=[RateLimitError("Rate limit", provider="openai"), "success"])
         decorated = retry_with_backoff(mock_func)
 
         decorated()
@@ -243,13 +235,12 @@ class TestRetryWithBackoffDecorator:
         # Retry 1: 1.0 * (2.0 ** 0) = 1.0
         assert mock_sleep.call_args[0][0] == 1.0
 
-    @patch('time.sleep')
+    @patch("time.sleep")
     def test_differentiated_backoff_network(self, mock_sleep):
         """Test network error uses moderate backoff (1.5x)."""
-        mock_func = Mock(side_effect=[
-            NetworkError("Connection failed", provider="openai"),
-            "success"
-        ])
+        mock_func = Mock(
+            side_effect=[NetworkError("Connection failed", provider="openai"), "success"]
+        )
         decorated = retry_with_backoff(mock_func)
 
         decorated()
@@ -258,14 +249,16 @@ class TestRetryWithBackoffDecorator:
         # Retry 1: 2.0 * (1.5 ** 0) = 2.0
         assert mock_sleep.call_args[0][0] == 2.0
 
-    @patch('time.sleep')
+    @patch("time.sleep")
     def test_differentiated_backoff_validation(self, mock_sleep):
         """Test validation error uses minimal backoff (1x linear)."""
-        mock_func = Mock(side_effect=[
-            ValidationError("Invalid param", provider="openai"),
-            ValidationError("Invalid param", provider="openai"),
-            "success"
-        ])
+        mock_func = Mock(
+            side_effect=[
+                ValidationError("Invalid param", provider="openai"),
+                ValidationError("Invalid param", provider="openai"),
+                "success",
+            ]
+        )
         decorated = retry_with_backoff(mock_func)
 
         decorated()
@@ -276,15 +269,17 @@ class TestRetryWithBackoffDecorator:
         assert mock_sleep.call_args_list[0][0][0] == 1.0
         assert mock_sleep.call_args_list[1][0][0] == 2.0
 
-    @patch('time.sleep')
+    @patch("time.sleep")
     def test_error_type_changes_adapts_strategy(self, mock_sleep):
         """Test that changing error type adapts to new strategy."""
         # First fails with RateLimitError, then with NetworkError, then succeeds
-        mock_func = Mock(side_effect=[
-            RateLimitError("Rate limit", provider="openai"),
-            NetworkError("Connection failed", provider="openai"),
-            "success"
-        ])
+        mock_func = Mock(
+            side_effect=[
+                RateLimitError("Rate limit", provider="openai"),
+                NetworkError("Connection failed", provider="openai"),
+                "success",
+            ]
+        )
         decorated = retry_with_backoff(mock_func)
 
         result = decorated()
@@ -298,14 +293,16 @@ class TestRetryWithBackoffDecorator:
         assert mock_sleep.call_args_list[0][0][0] == 1.0
         assert mock_sleep.call_args_list[1][0][0] == 3.0  # Attempt 2 with new strategy
 
-    @patch('time.sleep')
+    @patch("time.sleep")
     def test_error_type_changes_to_non_retryable_raises(self, mock_sleep):
         """Test that changing to non-retryable error raises immediately."""
         # First fails with RateLimitError (retryable), then with AuthenticationError (non-retryable)
-        mock_func = Mock(side_effect=[
-            RateLimitError("Rate limit", provider="openai"),
-            AuthenticationError("Invalid key", provider="openai"),
-        ])
+        mock_func = Mock(
+            side_effect=[
+                RateLimitError("Rate limit", provider="openai"),
+                AuthenticationError("Invalid key", provider="openai"),
+            ]
+        )
         decorated = retry_with_backoff(mock_func)
 
         with pytest.raises(AuthenticationError):

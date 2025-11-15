@@ -49,10 +49,7 @@ class TestProviderSwitching:
         # This demonstrates <5 line switching (actually <1 line!)
 
     @pytest.mark.integration
-    @pytest.mark.skipif(
-        not os.getenv("ANTHROPIC_API_KEY"),
-        reason="ANTHROPIC_API_KEY not set"
-    )
+    @pytest.mark.skipif(not os.getenv("ANTHROPIC_API_KEY"), reason="ANTHROPIC_API_KEY not set")
     def test_switching_to_anthropic(self):
         """
         Test switching to Anthropic - SAME CODE, different model string.
@@ -73,10 +70,12 @@ class TestProviderSwitchingStreaming:
         Only the model parameter changes.
         """
         client = LLMClient(model=model)
-        chunks = list(client.chat_stream(
-            messages=[{"role": "user", "content": "Say 'hi' only"}],
-            max_tokens=10,  # Slightly higher for reliable streaming
-        ))
+        chunks = list(
+            client.chat_stream(
+                messages=[{"role": "user", "content": "Say 'hi' only"}],
+                max_tokens=10,  # Slightly higher for reliable streaming
+            )
+        )
 
         # Verify streaming works
         assert len(chunks) > 0, "Should receive at least one chunk"
@@ -95,10 +94,7 @@ class TestProviderSwitchingStreaming:
         # ✅ PROOF: Streaming works with same code pattern
 
     @pytest.mark.integration
-    @pytest.mark.skipif(
-        not os.getenv("ANTHROPIC_API_KEY"),
-        reason="ANTHROPIC_API_KEY not set"
-    )
+    @pytest.mark.skipif(not os.getenv("ANTHROPIC_API_KEY"), reason="ANTHROPIC_API_KEY not set")
     def test_streaming_anthropic(self):
         """
         Test streaming with Anthropic - SAME CODE pattern.
