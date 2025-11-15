@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "llm-connectivity"
-version = "0.0.1"
+version = "0.1.0a1"
 description = "Unified Python interface for multiple Large Language Model providers"
 readme = "README.md"
 requires-python = ">=3.9"
