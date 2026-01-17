@@ -1,5 +1,9 @@
 # LLM Connectivity
 
+> **Status**: 🟡 DORMANT (alpha released - v0.1.0-alpha 2025-11-14)
+>
+> Stable alpha awaiting adoption/feedback. Core functionality complete.
+
 [![Tests](https://github.com/gmelli/llm-connectivity/actions/workflows/test.yml/badge.svg)](https://github.com/gmelli/llm-connectivity/actions/workflows/test.yml)
 [![Lint](https://github.com/gmelli/llm-connectivity/actions/workflows/lint.yml/badge.svg)](https://github.com/gmelli/llm-connectivity/actions/workflows/lint.yml)
 [![codecov](https://codecov.io/gh/gmelli/llm-connectivity/branch/main/graph/badge.svg)](https://codecov.io/gh/gmelli/llm-connectivity)
