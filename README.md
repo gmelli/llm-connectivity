@@ -12,6 +12,10 @@
 
 A unified Python interface for multiple Large Language Model providers.
 
+## Why LLM Connectivity?
+
+Switching between LLM providers should not require rewriting your application. Most teams start with one provider and discover they need another for cost, latency, or capability reasons. LLM Connectivity provides a single interface for OpenAI, Anthropic, Google, and local models so you can benchmark, switch providers, or add redundancy without changing your code.
+
 ## Overview
 
 `llm-connectivity` provides a consistent, provider-agnostic interface for interacting with LLM APIs from OpenAI, Anthropic, Google, and more. Switch providers with a single line of code while maintaining full feature compatibility.
